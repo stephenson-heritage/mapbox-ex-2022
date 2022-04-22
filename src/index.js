@@ -29,33 +29,57 @@ let map;
 let init = async function() {
 
 
-    if ('geolocation' in navigator) {
-        // geo
-
-        navigator.geolocation.getCurrentPosition(function(position) {
-            let pos = position.coords;
-            //console.log(pos.longitude, pos.latitude);
-
-            map.flyTo({ center: [pos.longitude, pos.latitude] });
-        });
-    } else {
-        // no geo
-        console.log("dfgdf");
-    }
 
 
     mapInit();
-
-
 }
 
-let mapInit = function() {
+let mapInit = async function() {
     map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/stephenson-heritage/cl2aikyg4000n15nuwwy5u72c',
         center: [-75.765, 45.456],
         zoom: 13.5
     });
+
+
+    if ('permissions' in navigator) {
+        let perm = await navigator.permissions.query({ name: 'geolocation' })
+        if (perm.state == "granted") {
+            if ('geolocation' in navigator) {
+                // geo
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    let pos = position.coords;
+                    //console.log(pos.longitude, pos.latitude);
+
+                    map.setCenter([pos.longitude, pos.latitude]);
+                });
+
+                // const locationWatch = navigator.geolocation.watchPosition((position) => {
+                //     let pos = position.coords;
+                //     map.setCenter([pos.longitude, pos.latitude]);
+                // });
+                //navigator.geolocation.clearWatch(locationWatch);
+
+            } else {
+                // no geo
+                serverGeolocate();
+            }
+        } else {
+            serverGeolocate();
+        }
+    } else {
+        serverGeolocate();
+    }
+
+
+}
+
+
+let serverGeolocate = async function() {
+    let serverGeo = await (await fetch("http://localhost:3000/api/location")).json();
+    //console.log(serverGeo);
+    map.setCenter([serverGeo.lng, serverGeo.lat]);
 }
 
 init();
