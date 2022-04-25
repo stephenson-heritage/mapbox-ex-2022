@@ -22,16 +22,15 @@ mapboxgl.accessToken = "pk.eyJ1Ijoic3RlcGhlbnNvbi1oZXJpdGFnZSIsImEiOiJjanZ4ejlxa
 let map;
 
 
-
-
-
-
 let init = async function() {
-
-
-
-
     mapInit();
+
+    document.getElementById("showMe").addEventListener("click", () => {
+        if (map != null) {
+            map.flyTo({ center: map.appSettings.user.position }, );
+            map.appSettings.user.marker.togglePopup();
+        }
+    });
 }
 
 let mapInit = async function() {
@@ -41,6 +40,12 @@ let mapInit = async function() {
         center: [-75.765, 45.456],
         zoom: 13.5
     });
+
+    map.appSettings = {
+        user: {
+            position: [0, 0]
+        }
+    };
 
 
     if ('permissions' in navigator) {
@@ -52,14 +57,9 @@ let mapInit = async function() {
                     let pos = position.coords;
                     //console.log(pos.longitude, pos.latitude);
 
-                    map.setCenter([pos.longitude, pos.latitude]);
+                    onLocateUser([pos.longitude, pos.latitude]);
                 });
 
-                // const locationWatch = navigator.geolocation.watchPosition((position) => {
-                //     let pos = position.coords;
-                //     map.setCenter([pos.longitude, pos.latitude]);
-                // });
-                //navigator.geolocation.clearWatch(locationWatch);
 
             } else {
                 // no geo
@@ -79,7 +79,18 @@ let mapInit = async function() {
 let serverGeolocate = async function() {
     let serverGeo = await (await fetch("http://localhost:3000/api/location")).json();
     //console.log(serverGeo);
-    map.setCenter([serverGeo.lng, serverGeo.lat]);
+    onLocateUser(
+        [serverGeo.longitude, serverGeo.latitude]
+    );
+}
+
+let onLocateUser = function(location) {
+    map.appSettings.user.position = location;
+    map.setCenter(location);
+    map.appSettings.user.marker = new mapboxgl.Marker({ color: "#aa1acd" })
+        .setLngLat(location)
+        .setPopup(new mapboxgl.Popup().setHTML("<h1>Hello World!</h1>"))
+        .addTo(map);
 }
 
 init();

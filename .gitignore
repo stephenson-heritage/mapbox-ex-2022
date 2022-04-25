@@ -16,3 +16,4 @@ ehthumbs.db
 Thumbs.db
 key.pem
 cert.pem
+server/public/bundle.js
